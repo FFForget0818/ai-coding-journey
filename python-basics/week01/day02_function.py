@@ -133,3 +133,62 @@ print(calculate_department_averages(employees))
 # for value in my_dict.values():
 # for key, value in my_dict.items():
 
+# PART 6 ASSERT
+assert add(3,5) == 8
+assert is_even(4) == True
+assert classify_score(92) == "A"
+assert count_departments(employees) == {
+    "HR": 2,
+    "Tech": 2,
+    "Finance": 1
+}
+assert find_highest_score_employee(employees)["name"] == "Eve"
+assert calculate_department_averages(employees)["HR"] == 81.5
+
+# PART 7
+# BUG 1
+def calculate_average(nums):
+    return(sum(nums) / len(nums))  # 一般写 return sum(nums) / len(nums)
+result = calculate_average([80, 90, 70])
+print(result * 2)
+
+# BUG 2
+def classify_score(score):
+    if score >= 90:
+        return "A"
+    elif score >= 80:
+        return "B"
+    elif score >= 70:
+        return "C"
+    elif score >= 60:
+        return "D"
+    else:  # 这个条件一开始没有想到
+        return "F"
+print(classify_score(95))
+
+# BUG 3
+def count_departments(employees):
+    department_count = {}
+
+    for employee in employees:
+        department = employee["department"]
+
+        if department in department_count:
+            department_count[department] += 1
+        else:
+            department_count[department] = 1
+    return department_count
+
+print(count_departments(employees))
+
+# PART 8
+def analyze_employees(employees):
+    analyze_report = {}
+    analyze_report["employee_count"] = 0 # 这里其实直接 analyze_report["employee_count"] = len(employees) 就行了
+    for count in count_departments(employees).values():
+        analyze_report["employee_count"] += count
+    analyze_report["department_count"] = count_departments(employees) # 这里第二次调用 count_departments 这个函数，如果重复调用，可以把第一次的调用结果记为一个变量，后续复用变量而不是重新调用
+    analyze_report["highest_score_employee"] = find_highest_score_employee(employees)
+    analyze_report["department_average_scores"] = calculate_department_averages(employees)
+    return analyze_report
+print(analyze_employees(employees))
