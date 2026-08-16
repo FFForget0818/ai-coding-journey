@@ -1,0 +1,12 @@
+{
+    "total_feedbacks": 8,
+    "communication_count": 2,
+    "team_count": 2,
+    "negative_feedback_count": 4,
+    "negative_feedbacks": [
+        "I think the workload is too high.",
+        "Communication between departments is poor.",
+        "The promotion process is unclear.",
+        "Too many meetings and too much overtime."
+    ]
+}

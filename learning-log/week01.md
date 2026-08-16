@@ -433,3 +433,594 @@ dict
 * `try / except`
 
 目标是把现在写死在 Python 代码里的 `feedbacks`，变成从真实文件读取的数据。
+
+## Day 4 — File / CSV / JSON / Exception
+
+### What I practiced
+
+今天主要练习了 Python 如何和外部文件交互，把 Day 3 写死在代码里的 feedback 数据改成了从 CSV 文件读取。
+
+今天接触的内容包括：
+
+* `with open(...)`
+* 文件读取和写入
+* 相对路径 / 绝对路径
+* Current Working Directory（cwd）
+* `csv.DictReader`
+* JSON
+* `json.dump()`
+* `try / except`
+* `FileNotFoundError`
+* 把 Day 3 和 Day 4 串成完整 pipeline
+
+今天最终完成的数据流程：
+
+```text
+feedbacks.csv
+↓
+load_feedback_data()
+↓
+list of dict
+↓
+extract_feedback_texts()
+↓
+list of str
+↓
+analyze_feedbacks()
+↓
+dict
+↓
+save_analysis_result()
+↓
+analysis_result.json
+```
+
+### What I learned
+
+#### 1. 相对路径是相对于 cwd，不是相对于 `.py` 文件
+
+今天一开始遇到了文件找不到的问题。
+
+我原来对路径的理解：
+
+> 就是当前".py“文件的位置
+
+后来理解：
+
+> 相对路径默认是从 Current Working Directory（cwd）开始找，而不是从当前 `.py` 文件的位置开始找。
+
+可以通过：
+
+```python
+import os
+
+print(os.getcwd())
+```
+
+查看当前 cwd。
+
+目前项目统一把：
+
+```text
+ai-coding-journey/
+```
+
+作为工作目录。
+
+因此读取 Day 4 的文件可以写：
+
+```python
+"python-basics/week01/data/sample.txt"
+```
+
+我的理解：
+
+> 要清楚cwd的概念，并且检查一下目前的cwd在哪里呀，这样才知道相对路径怎么写
+
+---
+
+#### 2. `with open()` 负责打开文件并自动关闭
+
+例如：
+
+```python
+with open(file_path, "r", encoding="utf-8") as file:
+    content = file.read()
+```
+
+目前接触了：
+
+```text
+"r" → read
+"w" → write / overwrite
+```
+
+我的理解：
+
+   > [为什么使用 `with open()`？] 会打开文件，并且在代码块执行结束后自动关闭文件，不需要自己手动 close()。
+
+我还发现，如果 `"w"` 打开的文件已经存在：
+
+> [填发生了什么] 会覆盖掉原本的
+
+---
+
+#### 3. `csv.DictReader` 不是已经读取完成的数据
+
+今天一开始我以为：
+
+```python
+reader = csv.DictReader(file)
+```
+
+之后 `reader` 已经是 CSV 里的全部数据。
+
+后来发现：
+
+```python
+print(reader)
+```
+
+打印的是一个 `DictReader object`，并不是所有行的数据。
+
+需要：
+
+```python
+for row in reader:
+    print(row)
+```
+
+才能逐行得到类似：
+
+```python
+{
+    "id": "1",
+    "department": "Tech",
+    "feedback": "..."
+}
+```
+
+我的理解：
+
+> `reader` 更像一个可以读取CSV的机器，但是得用 for row in reader 去一行行读取。
+
+---
+
+#### 4. 为什么 `for row in reader` 要放在 `with open()` 里面
+
+因为 `DictReader` 还需要依赖已经打开的文件继续读取数据。
+
+如果退出：
+
+```python
+with open(...)
+```
+
+文件就会被关闭。
+
+所以需要在文件还打开时：
+
+```text
+file
+↓
+DictReader
+↓
+逐行读取
+↓
+append 到普通 list
+```
+
+最终得到：
+
+```python
+data = [
+    {...},
+    {...}
+]
+```
+
+之后文件即使关闭，`data` 仍然可以正常使用。
+
+我的理解：
+
+> with open就是打开一本书，一旦退出这个，就把书合上了
+
+---
+
+#### 5. CSV 数据进入 Python 后可以继续使用 list 和 dict
+
+CSV：
+
+```csv
+id,department,feedback
+1,Tech,Hello
+2,HR,World
+```
+
+通过 `csv.DictReader()` 后，可以得到：
+
+```python
+[
+    {"id": "1", "department": "Tech", "feedback": "Hello"},
+    {"id": "2", "department": "HR", "feedback": "World"}
+]
+```
+
+也就是：
+
+```text
+CSV
+→ list of dict
+```
+
+所以 Day 1 学的：
+
+```text
+list
+dict
+for
+row["feedback"]
+```
+
+开始真正用于外部数据。
+
+---
+
+#### 6. 外部数据需要转换成已有函数需要的格式
+
+Day 3 的：
+
+```python
+analyze_feedbacks()
+```
+
+需要的是：
+
+```python
+[
+    "Hello",
+    "World"
+]
+```
+
+但是 CSV 读取出来的是：
+
+```python
+[
+    {"id": "1", "department": "Tech", "feedback": "Hello"},
+    ...
+]
+```
+
+所以增加了：
+
+```python
+extract_feedback_texts()
+```
+
+把：
+
+```text
+list of dict
+→
+list of str
+```
+
+我的理解：
+
+> [为什么不直接修改所有 Day 3 函数，而是先做一次数据转换？]多麻烦啊，改那么多函数。。。 不如直接复用函数，只改今天的数据格式
+
+---
+
+#### 7. JSON 可以用来保存 Python 的分析结果
+
+今天使用：
+
+```python
+json.dump()
+```
+
+把 Python 数据写入 JSON 文件。
+
+例如：
+
+```python
+result = {
+    "name": "berber",
+    "score": 100
+}
+```
+
+保存以后可以变成：
+
+```json
+{
+    "name": "berber",
+    "score": 100
+}
+```
+
+目前理解：
+
+```text
+json.dump()
+Python object → JSON 文件
+
+json.load()
+JSON 文件 → Python object
+```
+
+其中：
+
+```python
+indent=4
+```
+
+作用：
+
+> [自己填]增加人类的可读性
+
+```python
+ensure_ascii=False
+```
+
+作用：
+
+> [自己填]让中文直接以中文保存，而不是转换成 \uXXXX 形式的 Unicode 转义字符。
+
+---
+
+#### 8. `try / except` 是处理运行时可能出现的问题
+
+例如：
+
+```python
+try:
+    ...
+except FileNotFoundError:
+    ...
+```
+
+我的理解：
+
+> `try` 中正常运行时：运行try里面的内容
+
+> 如果发生 `FileNotFoundError`：运行except FileNotFoundError:里面的内容
+
+今天理解到，`try / except` 并不是让错误消失，而是：
+
+> [用自己的话填] 如果 try 中发生了我们指定要处理的 FileNotFoundError，程序会转去执行对应的 except，处理完成后继续执行后面的代码，而不是直接因为这个异常退出。
+
+---
+
+#### 9. 函数的返回值类型需要注意
+
+`load_feedback_data()` 正常情况下返回：
+
+```text
+list
+```
+
+如果读取失败直接返回：
+
+```python
+"File not found."
+```
+
+就会出现：
+
+```text
+成功 → list
+失败 → str
+```
+
+这可能给后面的代码造成问题。
+
+因此目前使用：
+
+```python
+None
+```
+
+表示读取失败。
+
+我的理解：
+
+> [为什么 `None` 比 `"File not found."` 更适合作为这里的失败结果？] None 更直接，并且后续可直接用 if xxx is not None
+
+---
+
+### Bugs / Things I noticed
+
+#### 1. 文件路径错误
+
+遇到：
+
+```text
+FileNotFoundError
+```
+
+原因：
+
+> 不知道cwd的概念
+
+解决：
+
+> 设置一个cwd
+
+---
+
+#### 2. CSV 文件不存在
+
+当 `feedbacks.csv` 不存在时：
+
+```text
+load_feedback_data()
+→ ?
+```
+
+如果后面的 pipeline 仍然直接执行：
+
+```python
+extract_feedback_texts(feedback_data)
+```
+
+会发生：
+
+> 就报错啊
+
+所以需要考虑：
+
+```python
+if feedback_data is not None:
+    ...
+```
+
+我的理解：
+
+> feedback_data is not None 表示这次读取成功；如果读取失败，load_feedback_data() 返回 None，后面的数据处理就不应该继续。
+
+---
+
+#### 3. CSV 只有 header
+
+例如：
+
+```csv
+id,department,feedback
+```
+
+最终：
+
+```python
+analysis_result
+```
+
+结果：
+
+> 全是0或者[]
+
+我认为这个结果：
+
+> 很合理啊
+
+---
+
+#### 4. CSV 中 feedback 是空值
+
+例如：
+
+```csv
+9,Tech,
+```
+
+读取以后：
+
+```python
+row["feedback"]
+```
+
+可能是：
+
+```python
+None
+```
+
+之后：
+
+```python
+clean_text(None)
+```
+
+会报错，因为：
+
+> feedback 是 None，传给 clean_text() 后相当于执行 None.strip()，但 None 没有 .strip() 方法（去掉两边空格），因此报错。
+
+今天让我意识到：
+
+> 不能默认外部数据一定是干净的。
+
+---
+
+#### 5. JSON 文件已经存在
+
+使用：
+
+```python
+with open(file_path, "w", ...)
+```
+
+重新保存时：
+
+> [旧文件会发生什么]会被覆盖
+
+---
+
+### What felt easy
+
+今天比较顺的部分：
+
+* 整体都还比较顺把
+
+### What was difficult
+
+今天比较需要理解的部分：
+
+* 相对路径和 cwd
+* `DictReader` 为什么还需要 `for`
+* 为什么 `for row in reader` 必须在 `with open()` 里面
+
+### My current understanding
+
+Day 3 以前，我处理的数据基本都是直接写在 Python 文件里的。
+
+Day 4 开始，程序的数据流变成：
+
+```text
+外部文件
+↓
+读取
+↓
+转换成 Python 数据
+↓
+调用函数分析
+↓
+产生结果
+↓
+保存回外部文件
+```
+
+我目前对这个过程的理解：
+
+> 这个更符合生产流程
+
+今天也开始意识到，真实程序不能默认外部数据永远是正确的，例如：
+
+```text
+文件不存在
+CSV 是空的
+字段值是 None
+```
+
+所以程序除了处理“正常情况”，还需要考虑异常和脏数据。
+
+### Next
+
+下一步进入 Week 1 最后一天：
+
+* Modules
+* 把现在过长的 Python 文件拆开
+* `import` 自己写的函数
+* 处理简单脏数据
+* 完成 Employee Feedback Analyzer
+* Refactor
+* 基础测试
+* Week 1 Review
+
+目标是把目前：
+
+```text
+所有代码都塞在 day04_file_io.py
+```
+
+改造成一个结构更清楚、能够独立运行的小项目。
