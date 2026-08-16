@@ -111,3 +111,31 @@ print(find_negative_feedbacks(feedbacks, negative_keywords))
 
 # Part 5
 
+def analyze_feedbacks(feedbacks):
+    result = {}
+    result["total_feedbacks"] = len(feedbacks)
+    result["communication_count"] = count_feedbacks_with_keyword(feedbacks, "communication")
+    result["team_count"] = count_feedbacks_with_keyword(feedbacks, "team")
+    result["negative_feedback_count"] = len(find_negative_feedbacks(feedbacks, negative_keywords)) # negative_keywords 这个变量并不是参数，而是一个全局变量
+    result["negative_feedbacks"] = find_negative_feedbacks(feedbacks, negative_keywords) # 这里 find_negative_feedbacks 又被用了两次
+    return result
+print(analyze_feedbacks(feedbacks))
+
+# 修改后的：
+def analyze_feedbacks(feedbacks, negative_keywords):
+    result = {}
+    result["total_feedbacks"] = len(feedbacks)
+    result["communication_count"] = count_feedbacks_with_keyword(feedbacks, "communication")
+    result["team_count"] = count_feedbacks_with_keyword(feedbacks, "team")
+    negative_feedbacks = find_negative_feedbacks(feedbacks, negative_keywords)
+    result["negative_feedback_count"] = len(negative_feedbacks)
+    result["negative_feedbacks"] = negative_feedbacks
+    return result
+print(analyze_feedbacks(feedbacks, negative_keywords))
+
+# Part 6 edge case
+
+print(contains_keyword("I like teamwork", "team")) # 这个业务逻辑应该是False，但是现在输出的是True
+print(contains_keyword("Communication.", "communication")) # 这个不清楚业务逻辑是什么，但是现在输出的是True
+print(count_words("")) # 这个我觉得没毛病啊，输出0
+print(search_feedbacks([], "team")) # 这个我也觉得还行啊，输出的是[]

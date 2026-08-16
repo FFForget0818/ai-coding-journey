@@ -230,3 +230,206 @@ def some_function(...):
 10 / 10
 
 原因：确实很简单
+
+## Day 3 — String & Text Processing
+
+### What I practiced
+
+今天主要练习了 Python 的字符串处理，以及怎么把前两天学的 `list`、`for`、`if` 和函数组合起来处理一组文本。
+
+今天用到的字符串操作包括：
+
+* `.strip()`
+* `.lower()`
+* `.split()`
+* `.replace()`
+* `in`
+
+完成的函数：
+
+* `clean_text()`
+* `contains_keyword()`
+* `count_words()`
+* `search_feedbacks()`
+* `count_feedbacks_with_keyword()`
+* `find_negative_feedbacks()`
+* `analyze_feedbacks()`
+
+### What I learned
+
+#### 1. 文本搜索前可以先统一格式
+
+一开始直接判断：
+
+```python
+"communication" in text
+```
+
+时，如果原文里是 `"Communication"`，结果会是 `False`。
+
+后来通过 `clean_text()` 先统一处理：
+
+```python
+def clean_text(text):
+    return text.strip().lower()
+```
+
+这样搜索时就不用考虑大小写差异。
+
+我的理解：
+
+clean_text 可以“标准化”文本，让后续操作文本的时候，不会出现大小写不一致的问题
+
+---
+
+#### 2. 函数可以一层一层复用
+
+今天比较明显感受到，前面写好的函数可以直接成为后面函数的零件。
+
+例如：
+
+```text
+clean_text()
+    ↓
+contains_keyword()
+    ↓
+search_feedbacks()
+    ↓
+count_feedbacks_with_keyword()
+```
+
+以前我可能会在每个函数里面重新写一次 `.lower()` 或循环，但现在开始意识到：
+
+复用函数相当于造轮子，已经造好的小轮子后续直接调用就行，不用重复造轮子
+---
+
+#### 3. `break` 在双层循环里的作用
+
+在 `find_negative_feedbacks()` 里，我需要检查每条 feedback 是否包含任意一个负面关键词。
+
+这里用了双层循环。
+
+如果一条 feedback 同时包含多个负面关键词，不加 `break` 就可能被加入结果多次。
+
+我的理解：
+
+> `break` 会结束 当前循环，但不会结束 外层的循环。
+
+---
+
+#### 4. 相同的计算没有必要做两遍
+
+最开始在 `analyze_feedbacks()` 里，我调用了两次：
+
+```python
+find_negative_feedbacks(feedbacks, negative_keywords)
+```
+
+后来改成：
+
+```python
+negative_feedbacks = find_negative_feedbacks(feedbacks, negative_keywords)
+```
+
+再分别使用：
+
+```python
+len(negative_feedbacks)
+negative_feedbacks
+```
+
+我的理解：
+
+如果重复调用函数，会增加计算量，最好是只调用一次
+
+---
+
+#### 5. 函数最好不要偷偷依赖外部变量
+
+最开始：
+
+```python
+def analyze_feedbacks(feedbacks):
+```
+
+函数内部直接使用了外面的 `negative_keywords`。
+
+后来改成：
+
+```python
+def analyze_feedbacks(feedbacks, negative_keywords):
+```
+
+我的理解：
+
+把需要的数据通过 parameter 传进来，可以提示我们需要哪些数据；如果不传 parameter ，后续少了这个变量都不知道怎么回事
+
+### Bugs / Things I noticed
+
+今天遇到或发现的问题：
+
+1. `contains_keyword("I like teamwork", "team")` 会返回 `True`
+
+   * 原因：目前使用的是子字符串匹配，team 本身就是 teamwork 的一部分，所以会返回 True；如果业务要求匹配完整单词，就需要进一步处理。
+   * 我认为当前业务下更合理的结果：False
+   * 暂时还没有解决，因为：还没学怎么分词
+
+2. `contains_keyword("Communication.", "communication")` 返回 `True`
+
+   * 我觉得这个结果：OK
+   * 原因：当前使用子字符串匹配，句号在关键词后面，不影响 communication 作为子字符串存在。
+
+3. `count_words("")` 返回 `0`
+
+   * 我原来以为：我就是觉得是0啊
+   * 实际发现：/
+
+4. `search_feedbacks([], "team")` 返回 `[]`
+
+   * 我觉得这个结果：没问题
+
+### What felt easy
+
+今天觉得比较顺的部分：
+
+* 都还可以
+
+### What was difficult
+
+今天比较需要思考的部分：
+
+* 多注意，同一个函数不要调用另一个函数2次
+* 注意函数的 parameter ，不要误用全局变量
+
+### My current understanding
+
+今天最大的感觉不是学会了几个字符串方法，而是开始能把不同东西组合起来：
+
+```text
+字符串
++
+list
++
+for / if
++
+function
++
+dict
+```
+
+最后组成一个简单的 Feedback Analyzer。
+
+我现在对“一个大任务拆成多个小函数”的理解是：
+
+> 先从小轮子开始造，慢慢变复杂
+
+### Next
+
+下一步准备学习：
+
+* 文件读写
+* CSV
+* JSON
+* `try / except`
+
+目标是把现在写死在 Python 代码里的 `feedbacks`，变成从真实文件读取的数据。
