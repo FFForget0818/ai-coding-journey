@@ -1024,3 +1024,574 @@ CSV 是空的
 ```
 
 改造成一个结构更清楚、能够独立运行的小项目。
+
+## Day 5 — Modules / Refactor / Testing / Mini Project
+
+### What I practiced
+
+今天主要把前几天写在一个文件里的代码拆成了多个 module，并完成了 Week 1 的 `Employee Feedback Analyzer` 小项目。
+
+今天主要练习：
+
+* Modules
+* `import`
+* `from ... import ...`
+* `main.py`
+* `if __name__ == "__main__":`
+* 代码职责拆分
+* 数据清洗
+* `None` / 空字符串处理
+* `and` 的短路逻辑
+* 基础测试
+* `assert`
+* Refactoring
+
+最终项目结构大致是：
+
+```text
+employee-feedback-analyzer/
+├── main.py
+├── feedback_analysis.py
+├── file_utils.py
+├── test_feedback_analysis.py
+├── data/
+│   └── feedbacks.csv
+└── output/
+    └── analysis_result.json
+```
+
+---
+
+### What I learned
+
+#### 1. 为什么需要 Module
+
+Day 4 的时候，文件读取、JSON 保存、文本分析、数据清洗、主程序逻辑全部放在一个 Python 文件里。
+
+代码越来越长以后，很难继续管理。
+
+今天把不同职责拆成：
+
+```text
+file_utils.py
+→ 文件读取和保存
+
+feedback_analysis.py
+→ feedback 数据处理和分析
+
+main.py
+→ 把整个流程串起来
+
+test_feedback_analysis.py
+→ 测试代码
+```
+
+我的理解：
+
+> [为什么拆成多个文件以后更清楚？]更方便快速定位问题，并且可以通过from import来调用自己需要的函数，不用的函数可以不使用
+
+---
+
+#### 2. `from ... import ...`
+
+例如：
+
+```python
+from file_utils import load_feedback_data, save_analysis_result
+
+from feedback_analysis import (
+    extract_feedback_texts,
+    analyze_feedbacks,
+)
+```
+
+我的理解：
+
+> [用自己的话解释这是什么意思]从另一个 module 中导入已经定义好的函数，导入后当前文件可以直接调用。
+
+我还理解到：
+
+> 哪个 module 自己使用某个 library，就应该由哪个 module 自己 `import`。
+
+例如 `file_utils.py` 使用：
+
+```python
+csv.DictReader()
+json.dump()
+```
+
+所以：
+
+```python
+import csv
+import json
+```
+
+放在 `file_utils.py`，而不是 `main.py`。
+
+---
+
+#### 3. `main.py` 不负责完成所有具体工作
+
+现在 `main.py` 主要负责：
+
+```text
+定义输入
+↓
+读取数据
+↓
+判断读取是否成功
+↓
+转换数据
+↓
+调用分析函数
+↓
+保存结果
+```
+
+而真正的文件读取、文本分析等工作交给其他 module。
+
+我的理解：
+
+> [为什么 main.py 更像“组织流程的人”？]main.py 负责组织整个 pipeline，其他 module 分别负责具体职责，例如文件处理、数据清洗和分析。
+
+---
+
+#### 4. `if __name__ == "__main__":`
+
+今天第一次用了：
+
+```python
+def main():
+    ...
+
+
+if __name__ == "__main__":
+    main()
+```
+
+目前我的理解：
+
+> 如果这个 `.py` 文件被直接运行，就执行 `main()`；如果这个文件只是被其他文件 `import`，则不会自动执行 `main()`。
+
+我目前还不需要完全理解 `__name__` 的内部机制。
+
+---
+
+#### 5. 在核心分析之前处理脏数据
+
+Day 4 发现 CSV 中：
+
+```csv
+9,Tech,
+```
+
+可能导致：
+
+```python
+feedback = None
+```
+
+如果继续进入：
+
+```python
+clean_text(feedback)
+```
+
+就相当于：
+
+```python
+None.strip()
+```
+
+因此会报错。
+
+今天修改：
+
+```python
+extract_feedback_texts()
+```
+
+让：
+
+```text
+None
+""
+"   "
+```
+
+这些无效 feedback 在进入分析逻辑之前就被过滤。
+
+我的理解：
+
+> [为什么在数据入口统一清洗，比让每个分析函数分别判断 None 更好？]要复用已有的函数啊，然后数据格式很复杂如果每个格式都拿去函数那边再清洗重复工作量很大，不如一进来就洗了
+
+---
+
+#### 6. `and` 的短路逻辑
+
+今天这里卡了一下：
+
+```python
+if feedback is not None and feedback.strip() != "":
+```
+
+后来理解执行顺序：
+
+```text
+先判断 feedback is not None
+
+如果 False
+→ 整个 and 已经是 False
+→ 后面的 feedback.strip() 不会执行
+
+如果 True
+→ 才继续判断 feedback.strip() != ""
+```
+
+所以即使：
+
+```python
+feedback = None
+```
+
+也不会执行：
+
+```python
+None.strip()
+```
+
+这个机制叫：
+
+> short-circuit evaluation（短路求值）
+
+我的理解：
+
+> [用自己的话再解释一次]就是一旦第一个表达式是False，就不运算第二个表达式了。
+
+---
+
+#### 7. `None`、`""`、`"   "` 和 `[]` 不是同一种东西
+
+今天一开始我写过类似：
+
+```python
+row["feedback"] != []
+```
+
+后来意识到：
+
+```text
+None      → 没有值
+
+""        → 空字符串
+
+"   "     → 有字符串，但内容全部是空格
+
+[]        → 空 list
+```
+
+而 `feedback` 这里正常应该是：
+
+```text
+str 或 None
+```
+
+所以没有必要和：
+
+```python
+[]
+```
+
+比较。
+
+另外目前记住：
+
+```python
+x is None
+x is not None
+```
+
+通常用于判断 `None`。
+
+---
+
+### Bugs / Things I noticed
+
+#### 1. 我最开始不会同时判断多个无效值
+
+原本尝试：
+
+```python
+if row["feedback"] is not (None or []):
+```
+
+后来理解这个写法并不是：
+
+> “feedback 既不是 None，也不是空值”。
+
+正确思路应该是把需要判断的条件分别表达出来。
+
+最终使用：
+
+```python
+if feedback is not None and feedback.strip() != "":
+```
+
+这个 bug 让我理解到：
+
+> [自己总结]and 连接的是两个完整的条件。Python 先判断 feedback is not None，只有它为 True 时才继续判断 feedback.strip() != ""。不能把多个“不等于”的目标直接塞进 is not (A or B)。
+
+---
+
+#### 2. 不应该重复写正式代码来测试
+
+测试文件：
+
+```text
+test_feedback_analysis.py
+```
+
+通过：
+
+```python
+from feedback_analysis import ...
+```
+
+调用真正的正式代码。
+
+而不是在测试文件里再复制一份函数。
+
+我的理解：
+
+> [为什么测试应该测试“真正正在使用的代码”？]如果测试文件自己复制一套函数，那么即使测试通过，也只能证明复制的那套代码没问题，不能证明项目实际使用的代码没问题。因此测试应该 import 正式代码。
+
+---
+
+#### 3. Debug 过程不一定全部留在正式代码里
+
+今天在代码中写了很多关于：
+
+```text
+我最开始怎么写
+为什么错
+后来怎么改
+```
+
+的注释。
+
+后来意识到，这些内容更适合放在：
+
+```text
+learning-log/week01.md
+```
+
+最终项目代码应该尽量保留：
+
+> [自己填：什么样的内容？]干净的东西
+
+---
+
+### Testing
+
+今天用 `assert` 测试了：
+
+```text
+正常字符串
+关键词存在
+关键词不存在
+空 feedback list
+正常 feedback
+None
+空字符串 ""
+纯空格 "   "
+正常数据和脏数据混合
+```
+
+例如：
+
+```python
+assert extract_feedback_texts([
+    {"feedback": "Hello"},
+    {"feedback": None},
+    {"feedback": "   "},
+    {"feedback": "World"}
+]) == ["Hello", "World"]
+```
+
+我的理解：
+
+> 测试不仅要测试正常输入，也应该主动测试之前出现过的 bug 和特殊输入。
+
+---
+
+### Refactoring
+
+今天对之前代码做了一些整理，例如：
+
+```python
+if keyword in text:
+    return True
+else:
+    return False
+```
+
+改成：
+
+```python
+return keyword in text
+```
+
+以及避免重复：
+
+```python
+clean_text()
+```
+
+和重复读取：
+
+```python
+row["feedback"]
+```
+
+我的理解：
+
+> Refactor 不是增加新功能，而是在功能基本不变的情况下，让现有代码更加 简单可读。
+
+---
+
+### What felt easy
+
+今天比较顺的部分：
+
+* 攒main.py和2个函数文件
+* refactor
+
+### What was difficult
+
+今天比较需要思考的部分：
+
+* Module 之间怎么拆职责
+* `and` 的短路逻辑
+* `None`、空字符串和空 list 的区别
+* assert的用例
+
+---
+
+### My current understanding
+
+现在我开始理解，一个程序不一定是：
+
+```text
+一个 Python 文件
++
+很多函数
+```
+
+也可以按照职责拆成：
+
+```text
+main
+↓
+调用不同 modules
+↓
+每个 module 只负责一类问题
+```
+
+Week 1 项目最终的数据流程是：
+
+```text
+feedbacks.csv
+↓
+file_utils
+↓
+Python data
+↓
+feedback_analysis
+↓
+analysis result
+↓
+file_utils
+↓
+analysis_result.json
+```
+
+我的理解：
+
+> [用自己的话总结现在对“小型 Python 项目”的认识]main.py是pipeline，其他的是辅助（函数包），然后还有一个测试文件
+
+---
+
+## Week 1 Reflection
+
+Week 1 从：
+
+```text
+list / dict / for / if
+```
+
+开始，逐渐做到：
+
+```text
+Functions
+↓
+Text Processing
+↓
+Files
+↓
+CSV / JSON
+↓
+Exception
+↓
+Modules
+↓
+Testing
+↓
+Refactor
+↓
+Mini Project
+```
+
+这一周我觉得自己进步最大的地方：
+
+> [自己填]真的动手了
+
+这一周最容易犯的错误：
+
+> [自己填]熬夜太晚，第二天上班状态不好
+
+目前我觉得已经比较熟悉的东西：
+
+> [自己填]都还行，解决问题的思路吧
+
+目前还不够熟，需要继续反复使用的东西：
+
+> [自己填]基础的语法
+
+如果现在重新从零写一次 `Employee Feedback Analyzer`，我认为自己：
+
+> [能独立写多少？哪些地方可能还需要查？]95%吧，一些基础的语法不一定记得
+
+---
+
+### Next
+
+Week 1 完成。
+
+下一步进入 **Week 2**。
+
+后续会继续在真实 coding 中反复使用 Week 1 的：
+
+```text
+list / dict
+for / if
+functions
+file handling
+modules
+exceptions
+testing
+debugging
+Git
+```
+
+而不是学完以后就放下。
