@@ -1,3 +1,4 @@
+# ai-coding-journey
 # AI Coding Journey｜AI 编程转型学习记录
 
 This repository documents my journey of transitioning into AI application development.
