@@ -148,3 +148,124 @@ method
 ```
 
 OOP 并不是替代之前学过的 function、list 和 `if`，而是提供了一种新的代码组织方式。
+
+## Day 2 — OOP Design
+
+### What I practiced
+
+今天主要练习了：
+
+* function vs method
+* responsibility
+* composition
+* object reference
+* 多个 object 协作
+
+完成了：
+
+```python
+Department
+Employee
+```
+
+以及：
+
+```python
+calculate_average_score()
+find_highest_score_employee()
+count_department()
+```
+
+### What I learned
+
+如果行为主要依赖某个 object 自己的数据，适合写成 method：
+
+```python
+employee.get_grade()
+```
+
+如果处理的是一组 objects，普通 function 往往更合适：
+
+```python
+calculate_average_score(employees)
+```
+
+一个 object 也可以保存另一个 object：
+
+```python
+employee.department
+```
+
+这里 `department` 可以直接是一个 `Department object`，这就是 composition。
+
+另外，多个变量或 attribute 可以指向同一个 object，因此修改共享 object 后，所有引用它的地方都会看到变化。
+
+### Key Takeaway
+
+```text
+自己的数据和行为 → method
+集合操作 → function
+object 包含 object → composition
+class 要有清晰 responsibility
+```
+
+## Day 3 — Type Hints
+
+### What I practiced
+
+今天主要学习了：
+
+* parameter type
+* return type
+* `-> None`
+* `list[Employee]`
+* `dict[str, int]`
+* 自定义 class 作为 type
+* `Employee | None`
+
+例如：
+
+```python
+def find_employee_by_name(
+    employees: list[Employee],
+    name: str
+) -> Employee | None:
+```
+
+### What I learned
+
+Type Hint 可以直接说明函数的数据流：
+
+```text
+输入什么类型
+→ 返回什么类型
+```
+
+例如：
+
+```python
+def is_pass(self) -> bool:
+```
+
+```python
+def update_score(self, new_score: int) -> None:
+```
+
+```python
+def find_highest_score_employee(
+    employees: list[Employee]
+) -> Employee:
+```
+
+同时理解了：
+
+> Type Hint 只是描述预期类型，不等于 Python 运行时会自动强制检查。
+
+### Key Takeaway
+
+```text
+list[Employee] → Employee objects 的 list
+dict[str, int] → key 是 str，value 是 int
+Employee | None → 可能返回 Employee，也可能返回 None
+-> None → 不返回有效结果
+```
