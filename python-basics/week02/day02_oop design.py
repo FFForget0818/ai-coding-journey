@@ -108,3 +108,92 @@ print(employee2.get_summary())
 # 一个 object 不一定需要把所有数据复制到自己身上。
 # 如果不建立 class Department，直接把所有的部门name和manager信息都写在 class Employee里面，那么一旦某个部门的manager改变，其所有Employee的object的attribute都要修改。但是如果有class Department 就只需要改一个Department的object的attribute就行了
 # Exercise 5 — Shared Object
+tech = Department("Tech", "David")
+
+employee1 = Employee("Alice", tech, 90)
+employee2 = Employee("Charlie", tech, 78)
+
+tech.manager = "Emma"
+
+print(employee1.department.manager, employee2.department.manager)
+
+# Part 7 — 什么东西不值得单独变成 class？
+# Exercise 6 — 不要过度 OOP
+def clean_text(text):
+    return text.strip().lower()
+
+def count_words(text):
+    return len(text.split())
+
+# Part 8 — 综合练习：Employee Management
+# Exercise 7 — 综合输出
+class Department:
+    def __init__(self, name, manager):
+        self.name = name
+        self.manager = manager
+
+class Employee:
+    def __init__(self, name, department, score):
+        self.name = name
+        self.department = department
+        self.score = score
+    def is_pass(self):
+        return self.score >= 60
+    def update_score(self, new_score):
+        self.score = new_score
+    def get_grade(self):
+        if self.score >= 90:
+            return "A"
+        elif self.score >= 80:
+            return "B"
+        elif self.score >= 70:
+            return "C"
+        elif self.score >= 60:
+            return "D"
+        else:
+            return "F"
+    def get_summary(self):
+        return f"{self.name} works in {self.department.name} managed by {self.department.manager} and has a score of {self.score}."
+
+def calculate_average_score(employees):
+    total_score = 0
+    for employee in employees:
+        total_score += employee.score
+    return total_score/len(employees)
+def find_highest_score_employee(employees):
+    highest_score_employee = employees[0]
+    for employee in employees[1:]:
+        if employee.score > highest_score_employee.score:
+            highest_score_employee = employee
+    return highest_score_employee
+def count_department(employees, department_name):
+    this_department_employees = 0
+    for employee in employees:
+        if employee.department.name == department_name:
+            this_department_employees += 1
+    return this_department_employees
+
+tech = Department("Tech", "David")
+hr = Department("HR", "Emma")
+finance = Department("Finance", "Frank")
+
+employee1 = Employee("Alice", tech, 90)
+employee2 = Employee("Bob", hr, 55)
+employee3 = Employee("Charlie", finance, 78)
+employee4 = Employee("Diana", tech, 85)
+employees = [employee1, employee2, employee3, employee4]
+
+for employee in employees:
+    print(employee.get_summary())
+
+for employee in employees:
+    print(f"{employee.name}: {employee.get_grade()}")
+
+print(f"平均分：{calculate_average_score(employees)}")
+print(f"最高分员工姓名：{find_highest_score_employee(employees).name}")
+print(f"Tech 部门人数：{count_department(employees, 'Tech')}") # 这里的Tech用单引号比较好
+
+tech.manager = "Grace"
+print(employee1.department.manager, employee4.department.manager)
+
+
