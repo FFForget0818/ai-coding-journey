@@ -269,3 +269,106 @@ dict[str, int] → key 是 str，value 是 int
 Employee | None → 可能返回 Employee，也可能返回 None
 -> None → 不返回有效结果
 ```
+## Day 4 — Dataclass & Data Modeling
+
+### What I practiced
+
+今天主要练习了：
+
+* `@dataclass`
+* default value
+* `__post_init__`
+* data model
+* validation
+* `raise ValueError`
+* dataclass + type hints + composition
+
+把原来的 `Department` 和 `Employee` 改成了 dataclass，并保留：
+
+```python
+is_pass()
+update_score()
+get_grade()
+get_summary()
+deactivate()
+```
+
+---
+
+### What I learned
+
+`@dataclass` 可以减少大量重复的 `__init__` 代码：
+
+```python
+@dataclass
+class Department:
+    name: str
+    manager: str
+```
+
+同时 `print(object)` 时会得到更清晰的内容，方便 debug。
+
+dataclass 仍然是普通 object，之前学过的：
+
+```text
+attribute
+method
+state
+reference
+composition
+```
+
+都继续成立。
+
+---
+
+### Validation
+
+Type Hint 只能说明预期类型：
+
+```python
+score: int
+```
+
+但：
+
+```python
+score = 900
+```
+
+虽然类型正确，业务上仍然不合理。
+
+因此可以用：
+
+```python
+def __post_init__(self) -> None:
+```
+
+在 object 创建后检查数据，例如：
+
+```python
+if self.score < 0 or self.score > 100:
+    raise ValueError(...)
+```
+
+同时也给 `update_score()` 加入 validation，避免通过 method 把 object 修改成非法状态。
+
+---
+
+### Key Takeaway
+
+```text
+dataclass
+→ 更简洁地定义结构化数据
+
+type hints
+→ 描述数据类型
+
+validation
+→ 判断数据是否符合业务规则
+
+raise ValueError
+→ 主动拒绝非法数据
+```
+
+今天开始从“写 class”进一步进入了简单的 data modeling。
