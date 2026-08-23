@@ -372,3 +372,124 @@ raise ValueError
 ```
 
 今天开始从“写 class”进一步进入了简单的 data modeling。
+
+## Day 5 — pytest & Testing Basics
+
+### What I practiced
+
+今天主要练习了：
+
+* `pytest`
+* `assert`
+* `pytest.raises`
+* boundary case
+* invalid case
+* edge case
+* `@pytest.mark.parametrize`
+* 测试文件和生产代码分离
+
+测试覆盖了：
+
+```text
+Employee methods
+calculate_average_score()
+find_highest_score_employee()
+非法 score / name
+空 list
+边界值
+```
+
+---
+
+### What I learned
+
+pytest 会自动寻找：
+
+```text
+test_xxx.py
+test_xxx()
+```
+
+测试基本结构是：
+
+```text
+Arrange
+→ 准备数据
+
+Act
+→ 执行行为
+
+Assert
+→ 检查结果
+```
+
+正常结果用：
+
+```python
+assert result == expected
+```
+
+异常行为用：
+
+```python
+with pytest.raises(ValueError):
+    ...
+```
+
+`@pytest.mark.parametrize` 可以用一套测试逻辑跑多组数据，减少重复代码。
+
+---
+
+### Testing Mindset
+
+今天开始区分：
+
+```text
+Normal Case
+→ 正常输入
+
+Boundary Case
+→ 0 / 100 这种边界
+
+Invalid Case
+→ -1 / 101 / 空 name
+
+Edge Case
+→ 空 list
+```
+
+测试失败不一定代表生产代码错，也可能是 test expectation 写错。
+
+---
+
+### Environment
+
+今天还创建并切换到了项目自己的：
+
+```text
+.venv
+```
+
+并在虚拟环境中安装了 `pytest`。
+
+同时在 `.gitignore` 中忽略：
+
+```text
+.venv/
+```
+
+避免把本地虚拟环境提交到 GitHub。
+
+---
+
+### Key Takeaway
+
+```text
+写完代码
+→ 不是只手动跑一次
+
+而是
+→ 用 tests 持续验证重要行为
+```
+
+pytest 让测试从零散的 `assert` 变成了可以自动发现、批量执行和重复运行的测试体系。
