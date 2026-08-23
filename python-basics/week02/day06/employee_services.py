@@ -1,7 +1,7 @@
 # 放普通函数
 # Exercise 2 — 拆 Services
 
-from day06_employee_models import Employee
+from employee_models import Employee
 
 def calculate_average_score(employees: list[Employee]) -> float:
     if len(employees) == 0:
@@ -27,7 +27,7 @@ def count_department(employees: list[Employee], department: str) -> int: # 这�
             total_count += 1
     return total_count # 我本来是想返回字符串的，说清楚这里是xx部门有xx人，但是这样并不好，因为这个返回值无法再参与后续的计算了。
 
-def find_employee_by_name(employees: list[Employee], name: str) -> Employee:
+def find_employee_by_name(employees: list[Employee], name: str) -> Employee | None:
     for employee in employees:
         if employee.name == name:
             return employee
