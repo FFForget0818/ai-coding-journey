@@ -1,0 +1,38 @@
+from support_ticket_manager_models import SupportAgent, Ticket
+
+
+def find_ticket_by_id(tickets: list[Ticket], ticket_id: int) -> Ticket | None:
+    for ticket in tickets:
+        if ticket.ticket_id == ticket_id:
+            return ticket
+    return None
+
+
+def count_open_tickets(tickets: list[Ticket]) -> int:
+    open_tickets = 0
+    for ticket in tickets:
+        if ticket.status == "open":
+            open_tickets += 1
+    return open_tickets
+
+
+def find_highest_priority_ticket(tickets: list[Ticket]) -> Ticket:
+    if len(tickets) == 0:
+        raise ValueError("There are no tickets!")
+    highest_priority_ticket = tickets[0]
+    for ticket in tickets[1:]:
+        if ticket.priority > highest_priority_ticket.priority:
+            highest_priority_ticket = ticket
+    return highest_priority_ticket
+
+
+def get_tickets_by_agent(tickets: list[Ticket], agent: str) -> list[Ticket]:
+    results = []
+    for ticket in tickets:
+        if ticket.assignee is None:
+            break
+        elif ticket.assignee.name == agent:
+            results.append(ticket)
+    return results
+
+
