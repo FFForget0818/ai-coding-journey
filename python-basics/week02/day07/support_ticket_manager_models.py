@@ -30,6 +30,9 @@ class Ticket:
         if self.status != "open" and self.status != "closed":  # 这里一开始写的是or，搞错了
             raise ValueError("Status must be open or closed.")
         # 这里本来还想验证一下assignee的类型，但是不知道怎么写
+        # if self.assignee is not None and not isinstance(
+        #     self.assignee, SupportAgent
+        # ):
 
     # 分配负责人
     def assign_to(self, agent: SupportAgent) -> None:

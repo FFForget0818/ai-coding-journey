@@ -28,12 +28,12 @@ def test_ticket_init_ticket_id() -> None:
 
 def test_ticket_init_ticket_id_lower() -> None:
     with pytest.raises(ValueError):
-        Ticket(1001, "Payment failed", 0, "open")
+        Ticket(0, "Payment failed", 3, "open")
 
 
 def test_ticket_init_ticket_id_below() -> None:
     with pytest.raises(ValueError):
-        Ticket(1001, "Payment failed", -1, "open")
+        Ticket(-1, "Payment failed", 3, "open")
 
 
 def test_ticket_init_title() -> None:
@@ -52,32 +52,51 @@ def test_ticket_init_title_ill2() -> None:
         Ticket(1001, "   ", 3, "open")
 
 
-def test_ticket_init_priotity() -> None:
-    ticket1 = Ticket(1001, "Payment failed", 3, "open")
+# def test_ticket_init_priotity() -> None:
+#     ticket1 = Ticket(1001, "Payment failed", 3, "open")
+#
+#     assert ticket1.priority == 3
+#
+#
+# def test_ticket_init_priotity_below() -> None:
+#     with pytest.raises(ValueError):
+#         Ticket(1001, "Payment failed", 0, "open")
+#
+#
+# def test_ticket_init_priotity_above() -> None:
+#     with pytest.raises(ValueError):
+#         Ticket(1001, "Payment failed", 6, "open")
+#
+#
+# def test_ticket_init_priotity_lower() -> None:
+#     ticket1 = Ticket(1001, "Payment failed", 1, "open")
+#
+#     assert ticket1.priority == 1
+#
+#
+# def test_ticket_init_priotity_upper() -> None:
+#     ticket1 = Ticket(1001, "Payment failed", 5, "open")
+#
+#     assert ticket1.priority == 5
 
-    assert ticket1.priority == 3
 
-
-def test_ticket_init_priotity_below() -> None:
+@pytest.mark.parametrize(
+    "priority",
+    [0, 6],
+)
+def test_ticket_init_priority_invalid(priority: int) -> None:
     with pytest.raises(ValueError):
-        Ticket(1001, "Payment failed", 0, "open")
+        Ticket(1001, "Payment failed", priority, "open")
 
 
-def test_ticket_init_priotity_above() -> None:
-    with pytest.raises(ValueError):
-        Ticket(1001, "Payment failed", 6, "open")
+@pytest.mark.parametrize(
+    "priority",
+    [1, 3, 5],
+)
+def test_ticket_init_priority(priority: int) -> None:
+    ticket1 = Ticket(1001, "Payment failed", priority, "open")
 
-
-def test_ticket_init_priotity_lower() -> None:
-    ticket1 = Ticket(1001, "Payment failed", 1, "open")
-
-    assert ticket1.priority == 1
-
-
-def test_ticket_init_priotity_upper() -> None:
-    ticket1 = Ticket(1001, "Payment failed", 5, "open")
-
-    assert ticket1.priority == 5
+    assert ticket1.priority == priority
 
 
 def test_ticket_init_status1() -> None:
