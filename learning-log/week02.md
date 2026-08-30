@@ -493,3 +493,269 @@ Edge Case
 ```
 
 pytest 让测试从零散的 `assert` 变成了可以自动发现、批量执行和重复运行的测试体系。
+
+## Day 6 — Refactor & Project Structure
+
+### What I practiced
+
+今天主要把已有代码按照职责拆分成多个 module，并用 pytest 验证 refactor 前后程序行为一致。
+
+项目结构大致拆分为：
+
+```text
+models
+services
+main
+tests
+```
+
+主要练习：
+
+* Separation of Concerns
+* Module responsibility
+* Import / dependency
+* Project structure
+* Refactor
+* pytest regression check
+
+---
+
+### What I learned
+
+#### 1. 不同 module 应该负责不同事情
+
+大致可以理解为：
+
+```text
+models
+→ 定义数据和 object 本身的行为
+
+services
+→ 处理多个 object 之间的业务逻辑
+
+main
+→ 创建 object、组织程序执行流程
+
+tests
+→ 验证程序行为
+```
+
+这样比把所有代码放在一个文件里更容易维护。
+
+#### 2. Dependency 有方向
+
+例如：
+
+```text
+main → services → models
+  └────────────→ models
+```
+
+表示：
+
+```text
+main imports services
+services imports models
+```
+
+底层的 `models` 不应该反过来依赖 `services` 或 `main`，否则容易出现 circular import。
+
+#### 3. Refactor 不应该改变程序行为
+
+Refactor 的目标是：
+
+```text
+改变代码结构
+而不是改变功能
+```
+
+因此正确流程应该是：
+
+```text
+pytest 全通过
+→ refactor
+→ 再运行 pytest
+→ 仍然全部通过
+```
+
+测试可以帮助确认重构有没有意外破坏原来的逻辑。
+
+---
+
+### Summary
+
+今天开始从“代码能运行”进一步关注：
+
+```text
+代码应该放在哪里
+module 之间应该怎样依赖
+如何安全地重构代码
+```
+
+这是从小脚本向真正 application structure 过渡的一步。
+
+# Day 7 — Mini Project: Support Ticket Manager
+
+### What I practiced
+
+今天独立完成了 Week 2 Mini Project：
+
+```text
+Support Ticket Manager
+```
+
+主要设计了：
+
+```text
+SupportAgent
+Ticket
+```
+
+并实现：
+
+```text
+validation
+method
+service functions
+pytest
+main.py
+```
+
+主要功能包括：
+
+* assign ticket
+* close ticket
+* update priority
+* find ticket
+* count open tickets
+* find highest priority ticket
+* get tickets by agent
+* calculate average priority
+
+---
+
+### What I learned
+
+#### 1. 开始自己判断代码应该怎么设计
+
+这次没有完全按照现成 architecture 写，而是开始自己判断：
+
+```text
+哪些数据应该放进 class
+哪些行为应该写成 method
+哪些逻辑应该放进 service
+函数应该返回什么
+异常情况应该怎么处理
+```
+
+相比 Week 1，对 requirement 的独立设计能力提高了一步。
+
+#### 2. `break` 和 `continue` 的区别
+
+```text
+break
+→ 结束整个 loop
+
+continue
+→ 跳过当前这一轮，继续下一轮
+```
+
+曾经在 `get_tickets_by_agent()` 中错误使用 `break`：
+
+```python
+if ticket.assignee is None:
+    break
+```
+
+这样遇到一个 unassigned ticket 后，后面的 ticket 都不会再检查。
+
+应该使用：
+
+```python
+continue
+```
+
+#### 3. `is` 和 `==` 不完全一样
+
+```text
+==
+→ 比较 value / 内容
+
+is
+→ 判断是不是同一个 object
+```
+
+如果函数应该从原列表中返回原来的 Ticket object，可以测试：
+
+```python
+assert result is ticket2
+```
+
+这样比只检查 value 是否相同更准确。
+
+#### 4. Test 本身也可能有 bug
+
+这次测试 `ticket_id` 非法值时，曾经误把测试参数传给了 `priority`。
+
+说明：
+
+```text
+production code 可能有 bug
+tests 本身也可能有 bug
+```
+
+写测试时也要确认：
+
+> 我实际测试的东西，真的是我想测试的吗？
+
+---
+
+### Testing
+
+这次测试覆盖了：
+
+```text
+normal case
+invalid case
+boundary case
+empty list
+None
+tie
+unassigned ticket
+```
+
+也继续使用了：
+
+```python
+@pytest.mark.parametrize
+```
+
+来处理测试步骤相同、只有 input / expected 不同的情况。
+
+---
+
+### Summary
+
+Week 2 结束后，我已经从：
+
+```text
+学习 Python syntax
+```
+
+逐渐进入：
+
+```text
+data modeling
++
+object design
++
+business logic
++
+project structure
++
+testing
++
+debugging
+```
+
+下一阶段需要继续减少 architecture 提示，开始更多地根据 requirement 自己设计 application。
