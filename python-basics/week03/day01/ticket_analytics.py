@@ -50,3 +50,29 @@ def sort_tickets_by_priority(
 
 
 # Part 4 — List / Dict Comprehension
+# [
+#     result
+#     for item in collection
+#     if condition
+# ]
+def get_open_ticket_titles(
+    tickets: list[Ticket]
+) -> list[str]:
+    return [
+        ticket.title
+        for ticket in tickets
+        if ticket.status == "open"
+    ]
+
+
+# {
+#     ticket.ticket_id: ticket
+#     for ticket in tickets
+# }
+def build_ticket_index(
+    tickets: list[Ticket]
+) -> dict[int, Ticket]:
+    return {
+        ticket.ticket_id: ticket
+        for ticket in tickets
+    }

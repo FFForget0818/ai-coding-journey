@@ -2,7 +2,7 @@
 import pytest
 
 from ticket_analytics import Ticket, create_ticket_labels, build_priority_updates, find_highest_priority_ticket, \
-    sort_tickets_by_priority
+    sort_tickets_by_priority, get_open_ticket_titles, build_ticket_index
 
 
 def test_create_ticket_labels() -> None:
@@ -126,3 +126,60 @@ def test_sort_tickets_by_priority_empty() -> None:
 
 
 # Part 4 — List / Dict Comprehension
+def test_get_open_ticket_titles() -> None:
+    ticket1 = Ticket(101, "Login issue", 5, "open", "Alice", ["auth", "urgent"])  # 修改的时候忘记删这里的逗号了
+    ticket2 = Ticket(102, "Export fails", 3, "open", "Bob", ["export"])
+    ticket3 = Ticket(103, "Password reset", 2, "closed", "Alice", ["auth"])
+    ticket4 = Ticket(104, "Slow dashboard", 5, "open", None, ["performance", "urgent"])
+    ticket5 = Ticket(105, "Billing question", 3, "closed", "Cara", ["billing"])
+    tickets = [ticket1, ticket2, ticket3, ticket4, ticket5]
+
+    assert get_open_ticket_titles(tickets) == ["Login issue",
+                                               "Export fails",
+                                               "Slow dashboard"]
+
+
+def test_get_open_ticket_titles_no_open_ticket() -> None:
+    ticket1 = Ticket(101, "Login issue", 5, "closed", "Alice", ["auth", "urgent"])  # 修改的时候忘记删这里的逗号了
+    ticket2 = Ticket(102, "Export fails", 3, "closed", "Bob", ["export"])
+    ticket3 = Ticket(103, "Password reset", 2, "closed", "Alice", ["auth"])
+    ticket4 = Ticket(104, "Slow dashboard", 5, "closed", None, ["performance", "urgent"])
+    ticket5 = Ticket(105, "Billing question", 3, "closed", "Cara", ["billing"])
+    tickets = [ticket1, ticket2, ticket3, ticket4, ticket5]
+
+    assert get_open_ticket_titles(tickets) == []
+
+
+def test_get_open_ticket_titles_empty_list() -> None:
+    tickets = []
+
+    assert get_open_ticket_titles(tickets) == []
+
+
+def test_build_ticket_index() -> None:
+    ticket1 = Ticket(101, "Login issue", 5, "open", "Alice", ["auth", "urgent"])  # 修改的时候忘记删这里的逗号了
+    ticket2 = Ticket(102, "Export fails", 3, "open", "Bob", ["export"])
+    ticket3 = Ticket(103, "Password reset", 2, "closed", "Alice", ["auth"])
+    ticket4 = Ticket(104, "Slow dashboard", 5, "open", None, ["performance", "urgent"])
+    ticket5 = Ticket(105, "Billing question", 3, "closed", "Cara", ["billing"])
+    tickets = [ticket1, ticket2, ticket3, ticket4, ticket5]
+
+    assert build_ticket_index(tickets) == {101: ticket1,
+                                           102: ticket2,
+                                           103: ticket3,
+                                           104: ticket4,
+                                           105: ticket5}
+
+
+def test_build_ticket_index_repetition() -> None:
+    ticket1 = Ticket(101, "Login issue", 5, "open", "Alice", ["auth", "urgent"])  # 修改的时候忘记删这里的逗号了
+    ticket2 = Ticket(101, "Export fails", 3, "open", "Bob", ["export"])
+    ticket3 = Ticket(103, "Password reset", 2, "closed", "Alice", ["auth"])
+    ticket4 = Ticket(104, "Slow dashboard", 5, "open", None, ["performance", "urgent"])
+    ticket5 = Ticket(105, "Billing question", 3, "closed", "Cara", ["billing"])
+    tickets = [ticket1, ticket2, ticket3, ticket4, ticket5]
+
+    assert build_ticket_index(tickets) == {101: ticket2,  # dict 不能同时保存两个相同的 key, 如果有两个key都是101，则只会存在一个key，且值是后面那个
+                                           103: ticket3,
+                                           104: ticket4,
+                                           105: ticket5}
