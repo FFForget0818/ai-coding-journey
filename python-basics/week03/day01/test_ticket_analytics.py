@@ -3,7 +3,7 @@ import pytest
 
 from ticket_analytics import Ticket, create_ticket_labels, build_priority_updates, find_highest_priority_ticket, \
     sort_tickets_by_priority, get_open_ticket_titles, build_ticket_index, get_all_tags, has_urgent_open_ticket, \
-    are_all_tickets_closed, build_mapping
+    are_all_tickets_closed, build_mapping, get_top_open_ticket_titles
 
 
 def test_create_ticket_labels() -> None:
@@ -271,6 +271,7 @@ def test_are_all_tickets_closed_empty() -> None:
 
 
 # Final Challenge
+# Challenge 1 — 找 silent bug
 def test_build_mapping() -> None:
     names = ["Alice", "Bob", "Carlie"]
     scores = [95, 80, 72]
@@ -312,3 +313,43 @@ def test_build_mapping_empty() -> None:
     result = build_mapping(names, scores)
 
     assert result == {}
+
+
+# Challenge 4 — 综合函数
+def test_get_top_open_ticket_titles() -> None:
+    ticket1 = Ticket(101, "Login issue", 5, "open", "Alice", ["auth"])
+    ticket2 = Ticket(102, "Export fails", 3, "open", "Bob", ["export"])
+    ticket3 = Ticket(103, "Password reset", 2, "closed", "Alice", ["auth"])
+    ticket4 = Ticket(104, "Slow dashboard", 5, "open", None, ["performance"])
+    ticket5 = Ticket(105, "Billing question", 3, "closed", "Cara", ["billing", "urgent"])
+    tickets = [ticket1, ticket2, ticket3, ticket4, ticket5]
+    limit = 2
+
+    assert get_top_open_ticket_titles(tickets, limit) == [
+                                                    "Login issue",
+                                                    "Slow dashboard",
+                                                  ]
+
+
+def test_get_top_open_ticket_titles_negative_limit() -> None:
+    ticket1 = Ticket(101, "Login issue", 5, "open", "Alice", ["auth"])
+    ticket2 = Ticket(102, "Export fails", 3, "open", "Bob", ["export"])
+    ticket3 = Ticket(103, "Password reset", 2, "closed", "Alice", ["auth"])
+    ticket4 = Ticket(104, "Slow dashboard", 5, "open", None, ["performance"])
+    ticket5 = Ticket(105, "Billing question", 3, "closed", "Cara", ["billing", "urgent"])
+    tickets = [ticket1, ticket2, ticket3, ticket4, ticket5]
+    limit = -2
+
+    assert get_top_open_ticket_titles(tickets, limit) == []
+
+
+def test_get_top_open_ticket_titles_zero_limit() -> None:
+    ticket1 = Ticket(101, "Login issue", 5, "open", "Alice", ["auth"])
+    ticket2 = Ticket(102, "Export fails", 3, "open", "Bob", ["export"])
+    ticket3 = Ticket(103, "Password reset", 2, "closed", "Alice", ["auth"])
+    ticket4 = Ticket(104, "Slow dashboard", 5, "open", None, ["performance"])
+    ticket5 = Ticket(105, "Billing question", 3, "closed", "Cara", ["billing", "urgent"])
+    tickets = [ticket1, ticket2, ticket3, ticket4, ticket5]
+    limit = 0
+
+    assert get_top_open_ticket_titles(tickets, limit) == []

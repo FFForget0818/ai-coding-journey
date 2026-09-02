@@ -121,7 +121,61 @@ def are_all_tickets_closed(
 
 
 # Final Challenge
+# Challenge 1 — 找 silent bug
 def build_mapping(names: list[str], scores: list[int]) -> dict[str, int]:
     if len(names) != len(scores):
         raise ValueError("数据长度不一致！")
     return dict(zip(names, scores))
+
+
+# Challenge 2 — Comprehension ↔ Loop
+def get_closed_ids(tickets: list[Ticket]) -> list[int]:
+    result = []
+    for ticket in tickets:
+        if ticket.status == "closed":
+            result.append(ticket.ticket_id)
+    return result
+
+
+# Challenge 4 — 综合函数
+def get_top_open_ticket_titles(
+    tickets: list[Ticket],
+    limit: int
+) -> list[str]:
+    new_sort = sorted(tickets, key=lambda ticket: (-ticket.priority, ticket.ticket_id))
+    result = []
+    for ticket in new_sort:
+        if ticket.status == "open":
+            if len(result) < limit:
+                result.append(ticket.title)
+                continue
+            else:
+                break
+    return result
+
+
+def get_top_open_ticket_titles(
+    tickets: list[Ticket],
+    limit: int
+) -> list[str]:
+    if limit <= 0:
+        return []
+
+    open_tickets = [
+        ticket
+        for ticket in tickets
+        if ticket.status == "open"
+    ]
+
+    sorted_tickets = sorted(
+        open_tickets,
+        key=lambda ticket: (
+            -ticket.priority,
+            ticket.ticket_id
+        )
+    )
+
+    return [
+        ticket.title
+        for ticket in sorted_tickets[:limit]
+    ]
