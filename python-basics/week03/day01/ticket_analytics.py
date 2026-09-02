@@ -76,3 +76,52 @@ def build_ticket_index(
         ticket.ticket_id: ticket
         for ticket in tickets
     }
+
+
+# Part 5 — set
+# def get_all_tags(
+#     tickets: list[Ticket]
+# ) -> set[str]:
+#     result = set()
+#     for ticket in tickets:
+#         for tag in ticket.tags:
+#             result.add(tag)
+#     return result
+
+
+def get_all_tags(
+    tickets: list[Ticket]
+) -> set[str]:
+    return {
+        tag  # 原来这里直接写tag就行了啊我服了
+        for ticket in tickets
+        for tag in ticket.tags
+    }
+
+
+# Part 6 — any / all
+def has_urgent_open_ticket(
+    tickets: list[Ticket]
+) -> bool:
+    return any(
+        ticket.status == "open" and "urgent" in ticket.tags
+        for ticket in tickets
+    )
+
+
+def are_all_tickets_closed(
+    tickets: list[Ticket]
+) -> bool:
+    if len(tickets) == 0:
+        return False
+    return all(
+        ticket.status == "closed"
+        for ticket in tickets
+    )
+
+
+# Final Challenge
+def build_mapping(names: list[str], scores: list[int]) -> dict[str, int]:
+    if len(names) != len(scores):
+        raise ValueError("数据长度不一致！")
+    return dict(zip(names, scores))

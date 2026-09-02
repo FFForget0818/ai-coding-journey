@@ -2,7 +2,8 @@
 import pytest
 
 from ticket_analytics import Ticket, create_ticket_labels, build_priority_updates, find_highest_priority_ticket, \
-    sort_tickets_by_priority, get_open_ticket_titles, build_ticket_index
+    sort_tickets_by_priority, get_open_ticket_titles, build_ticket_index, get_all_tags, has_urgent_open_ticket, \
+    are_all_tickets_closed, build_mapping
 
 
 def test_create_ticket_labels() -> None:
@@ -69,7 +70,7 @@ def test_find_highest_priority_ticket() -> None:
 
 
 def test_find_highest_priority_ticket_tie() -> None:
-    ticket1 = Ticket(101, "Login issue", 5, "open", "Alice", ["auth", "urgent"])  # 修改的时候忘记删这里的逗号了
+    ticket1 = Ticket(101, "Login issue", 5, "open", "Alice", ["auth", "urgent"])
     ticket2 = Ticket(102, "Export fails", 3, "open", "Bob", ["export"])
     ticket3 = Ticket(103, "Password reset", 2, "closed", "Alice", ["auth"])
     ticket4 = Ticket(104, "Slow dashboard", 5, "open", None, ["performance", "urgent"])
@@ -90,7 +91,7 @@ def test_find_highest_priority_ticket_empty() -> None:
 
 
 def test_sort_tickets_by_priority() -> None:
-    ticket1 = Ticket(101, "Login issue", 5, "open", "Alice", ["auth", "urgent"])  # 修改的时候忘记删这里的逗号了
+    ticket1 = Ticket(101, "Login issue", 5, "open", "Alice", ["auth", "urgent"])
     ticket2 = Ticket(102, "Export fails", 3, "open", "Bob", ["export"])
     ticket3 = Ticket(103, "Password reset", 2, "closed", "Alice", ["auth"])
     ticket4 = Ticket(104, "Slow dashboard", 4, "open", None, ["performance", "urgent"])
@@ -104,7 +105,7 @@ def test_sort_tickets_by_priority() -> None:
 
 
 def test_sort_tickets_by_priority_tie() -> None:
-    ticket1 = Ticket(101, "Login issue", 5, "open", "Alice", ["auth", "urgent"])  # 修改的时候忘记删这里的逗号了
+    ticket1 = Ticket(101, "Login issue", 5, "open", "Alice", ["auth", "urgent"])
     ticket2 = Ticket(102, "Export fails", 3, "open", "Bob", ["export"])
     ticket3 = Ticket(103, "Password reset", 2, "closed", "Alice", ["auth"])
     ticket4 = Ticket(104, "Slow dashboard", 5, "open", None, ["performance", "urgent"])
@@ -127,7 +128,7 @@ def test_sort_tickets_by_priority_empty() -> None:
 
 # Part 4 — List / Dict Comprehension
 def test_get_open_ticket_titles() -> None:
-    ticket1 = Ticket(101, "Login issue", 5, "open", "Alice", ["auth", "urgent"])  # 修改的时候忘记删这里的逗号了
+    ticket1 = Ticket(101, "Login issue", 5, "open", "Alice", ["auth", "urgent"])
     ticket2 = Ticket(102, "Export fails", 3, "open", "Bob", ["export"])
     ticket3 = Ticket(103, "Password reset", 2, "closed", "Alice", ["auth"])
     ticket4 = Ticket(104, "Slow dashboard", 5, "open", None, ["performance", "urgent"])
@@ -140,7 +141,7 @@ def test_get_open_ticket_titles() -> None:
 
 
 def test_get_open_ticket_titles_no_open_ticket() -> None:
-    ticket1 = Ticket(101, "Login issue", 5, "closed", "Alice", ["auth", "urgent"])  # 修改的时候忘记删这里的逗号了
+    ticket1 = Ticket(101, "Login issue", 5, "closed", "Alice", ["auth", "urgent"])
     ticket2 = Ticket(102, "Export fails", 3, "closed", "Bob", ["export"])
     ticket3 = Ticket(103, "Password reset", 2, "closed", "Alice", ["auth"])
     ticket4 = Ticket(104, "Slow dashboard", 5, "closed", None, ["performance", "urgent"])
@@ -157,7 +158,7 @@ def test_get_open_ticket_titles_empty_list() -> None:
 
 
 def test_build_ticket_index() -> None:
-    ticket1 = Ticket(101, "Login issue", 5, "open", "Alice", ["auth", "urgent"])  # 修改的时候忘记删这里的逗号了
+    ticket1 = Ticket(101, "Login issue", 5, "open", "Alice", ["auth", "urgent"])
     ticket2 = Ticket(102, "Export fails", 3, "open", "Bob", ["export"])
     ticket3 = Ticket(103, "Password reset", 2, "closed", "Alice", ["auth"])
     ticket4 = Ticket(104, "Slow dashboard", 5, "open", None, ["performance", "urgent"])
@@ -172,14 +173,142 @@ def test_build_ticket_index() -> None:
 
 
 def test_build_ticket_index_repetition() -> None:
-    ticket1 = Ticket(101, "Login issue", 5, "open", "Alice", ["auth", "urgent"])  # 修改的时候忘记删这里的逗号了
+    ticket1 = Ticket(101, "Login issue", 5, "open", "Alice", ["auth", "urgent"])
     ticket2 = Ticket(101, "Export fails", 3, "open", "Bob", ["export"])
     ticket3 = Ticket(103, "Password reset", 2, "closed", "Alice", ["auth"])
     ticket4 = Ticket(104, "Slow dashboard", 5, "open", None, ["performance", "urgent"])
     ticket5 = Ticket(105, "Billing question", 3, "closed", "Cara", ["billing"])
     tickets = [ticket1, ticket2, ticket3, ticket4, ticket5]
 
-    assert build_ticket_index(tickets) == {101: ticket2,  # dict 不能同时保存两个相同的 key, 如果有两个key都是101，则只会存在一个key，且值是后面那个
-                                           103: ticket3,
-                                           104: ticket4,
-                                           105: ticket5}
+    result = build_ticket_index(tickets)
+
+    assert result == {101: ticket2,  # dict 不能同时保存两个相同的 key, 如果有两个key都是101，则只会存在一个key，且值是后面那个
+                      103: ticket3,
+                      104: ticket4,
+                      105: ticket5}
+    assert result[101] is ticket2  # 再确认一下最后保存的确实就是原来的 ticket2 object
+    assert len(result) == 4
+
+# Part 5 — set
+def test_get_all_tags() -> None:
+    ticket1 = Ticket(101, "Login issue", 5, "open", "Alice", ["auth", "urgent"])
+    ticket2 = Ticket(102, "Export fails", 3, "open", "Bob", ["export"])
+    ticket3 = Ticket(103, "Password reset", 2, "closed", "Alice", ["auth"])
+    ticket4 = Ticket(104, "Slow dashboard", 5, "open", None, ["performance", "urgent"])
+    ticket5 = Ticket(105, "Billing question", 3, "closed", "Cara", ["billing"])
+    tickets = [ticket1, ticket2, ticket3, ticket4, ticket5]
+
+    assert get_all_tags(tickets) == {
+                                        "auth",
+                                        "urgent",
+                                        "export",
+                                        "performance",
+                                        "billing",
+                                    }
+
+
+def test_get_all_tags_empty() -> None:
+    tickets = []
+
+    assert get_all_tags(tickets) == set()  # 原来set不是{}啊，就是set()
+
+
+# Part 6 — any / all
+def test_has_urgent_open_ticket() -> None:
+    ticket1 = Ticket(101, "Login issue", 5, "open", "Alice", ["auth", "urgent"])
+    ticket2 = Ticket(102, "Export fails", 3, "open", "Bob", ["export"])
+    ticket3 = Ticket(103, "Password reset", 2, "closed", "Alice", ["auth"])
+    ticket4 = Ticket(104, "Slow dashboard", 5, "open", None, ["performance", "urgent"])
+    ticket5 = Ticket(105, "Billing question", 3, "closed", "Cara", ["billing"])
+    tickets = [ticket1, ticket2, ticket3, ticket4, ticket5]
+
+    assert has_urgent_open_ticket(tickets) is True
+
+
+def test_has_urgent_open_ticket_false() -> None:
+    ticket1 = Ticket(101, "Login issue", 5, "open", "Alice", ["auth"])
+    ticket2 = Ticket(102, "Export fails", 3, "open", "Bob", ["export"])
+    ticket3 = Ticket(103, "Password reset", 2, "closed", "Alice", ["auth"])
+    ticket4 = Ticket(104, "Slow dashboard", 5, "open", None, ["performance"])
+    ticket5 = Ticket(105, "Billing question", 3, "closed", "Cara", ["billing", "urgent"])
+    tickets = [ticket1, ticket2, ticket3, ticket4, ticket5]
+
+    assert has_urgent_open_ticket(tickets) is False
+
+
+def test_has_urgent_open_ticket_empty() -> None:
+    tickets = []
+
+    assert has_urgent_open_ticket(tickets) is False
+
+
+def test_are_all_tickets_closed() -> None:
+    ticket1 = Ticket(101, "Login issue", 5, "open", "Alice", ["auth"])
+    ticket2 = Ticket(102, "Export fails", 3, "open", "Bob", ["export"])
+    ticket3 = Ticket(103, "Password reset", 2, "closed", "Alice", ["auth"])
+    ticket4 = Ticket(104, "Slow dashboard", 5, "open", None, ["performance"])
+    ticket5 = Ticket(105, "Billing question", 3, "closed", "Cara", ["billing", "urgent"])
+    tickets = [ticket1, ticket2, ticket3, ticket4, ticket5]
+
+    assert are_all_tickets_closed(tickets) is False
+
+
+def test_are_all_tickets_closed_all_closed() -> None:
+    ticket1 = Ticket(101, "Login issue", 5, "closed", "Alice", ["auth"])
+    ticket2 = Ticket(102, "Export fails", 3, "closed", "Bob", ["export"])
+    ticket3 = Ticket(103, "Password reset", 2, "closed", "Alice", ["auth"])
+    ticket4 = Ticket(104, "Slow dashboard", 5, "closed", None, ["performance"])
+    ticket5 = Ticket(105, "Billing question", 3, "closed", "Cara", ["billing", "urgent"])
+    tickets = [ticket1, ticket2, ticket3, ticket4, ticket5]
+
+    assert are_all_tickets_closed(tickets) is True
+
+
+def test_are_all_tickets_closed_empty() -> None:
+    tickets = []
+
+    assert are_all_tickets_closed(tickets) is False
+
+
+# Final Challenge
+def test_build_mapping() -> None:
+    names = ["Alice", "Bob", "Carlie"]
+    scores = [95, 80, 72]
+
+    result = build_mapping(names, scores)
+
+    assert result == {
+        "Alice": 95,
+        "Bob": 80,
+        "Carlie": 72
+    }
+
+
+def test_build_mapping_diff_len() -> None:
+    names = ["Alice", "Bob", "Carlie"]
+    scores = [95, 80]
+
+    with pytest.raises(ValueError):
+        build_mapping(names, scores)
+
+
+def test_build_mapping_repetition_name() -> None:
+    names = ["Alice", "Alice", "Carlie"]
+    scores = [95, 80, 72]
+
+    result = build_mapping(names, scores)
+
+    assert result == {
+        "Alice": 80,
+        "Carlie": 72
+    }
+    assert len(result) == 2
+
+
+def test_build_mapping_empty() -> None:
+    names = []
+    scores = []
+
+    result = build_mapping(names, scores)
+
+    assert result == {}
